@@ -6,12 +6,18 @@ RUN apt-get -y update && \
 		awstats \
 		gettext
 
-COPY awstats.stats.conf /etc/awstats/awstats.stats.conf.template
-COPY run.sh /
+RUN mkdir -p /opt/GeoIP && \
+    curl -L https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz \
+        | gunzip -c - > /opt/GeoIP/GeoIP.dat && \
+    curl -L https://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz \
+        | gunzip -c - > /opt/GeoIP/GeoIPv6.dat
 
-ENV AWSTATS_CONF_LOGFILE="/var/log/apache2/other_vhosts_access.log"
-ENV AWSTATS_CONF_LOGFORMAT="%referer %host %logname %other %time1 %methodurl %code %bytesd %refererquot %uaquot"
-ENV AWSTATS_CONF_SITEDOMAIN="awstats"
+
+ADD config /var/awstats-config/
+COPY run.sh /
+COPY template.html /
+
+RUN cp -R /usr/share/awstats/icon/ /var/www/html/awstats-icon
 
 WORKDIR /
 
