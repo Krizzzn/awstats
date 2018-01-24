@@ -1,36 +1,37 @@
 # awstats
-Docker image for awstats
 
-Dit image bevat een apache en awstats installatie. 
+Awstats instance that reads one or multiple log files. 
+The log files are read every 2 hours. During the read the script generates an index file of all 
+config files and places it in the webserver root.
 
-_Bouwen_: ``docker build -t awstats2 .``
+## volumes
+`/var/log/analyse/` contains one or more log files    
+`/etc/awstats` contains the settings file
 
-_Runnen_: ``docker run -it -p 8082:80  -v ~/Documents/docker/awstats/other\_vhosts\_access.log:/var/log/apache2/other\_vhosts\_access.log awstats2``
+## configuration
+`awstats.conf` contains the default awstats configuration. Place one or multiple override configurations
+in the `/etc/awstats` volume. The file `awstats.example.org.conf` shows how these overrides can look like.
+The config files must be in the format awstats.XXXXX.conf, where XXXXX is the host name.
 
-_Webpagina_: ``http://localhost:8082/cgi-bin/awstats.pl?``
+## misc
+* make sure to check/update the event log format (`LogFormat`) in the config file. The current format does 
+not match the default format - it expects the hostname (`%virtualname`) in every line.    
+`%host %virtualname %logname - %time1 %code %methodurl %bytesd %refererquot %uaquot`
+* when the container starts the first time, it will place the configurations in the `/etc/awstats`-volume
+* a new config file placed into the `/etc/awstats`-volume will be picked up when the log files are read
+* the index file is refreshed every time the log files are read
 
-------
-
-De volgende omgevingsvariabelen worden gebruikt in de awstats configuratie (awstats.stats.conf):
- (Default wordt other\_vhost\_access.log gebruikt)
-
- AWSTATS_CONF_LOGFILE="/var/log/apache2/other\_vhosts\_access.log"
- 
- AWSTATS_CONF_LOGFORMAT="%referer %host %logname %other %time1 %methodurl %code %bytesd %refererquot %uaquot"
- 
- AWSTATS_CONF_SITEDOMAIN="awstats"
- 
-Op de volgende locaties :
-
- LogFile="\_\_AWSTATS_CONF_LOGFILE\_\_"
-
- LogFormat=\_\_AWSTATS_CONF_LOGFORMAT\_\_
-
- SiteDomain="\_\_AWSTATS_CONF_SITEDOMAIN\_\_"
-
- HostAliases="localhost 127.0.0.1 \_\_AWSTATS_CONF_SITEDOMAIN\_\_"
-
-Andere configuratie settings zijn default ingesteld zoals het niet meetellen van requests vanuit IDgis:
-
-SkipHosts="127.0.0.1 83.247.8.136 78.46.96.163 localhost REGEX[^192\.168\.] REGEX[^10\.]"
+## docker-compose.yml
+```
+web:
+  container_name: awstats
+  image: krizzzn/awstats
+  ports:
+    - 2023:80
+  volumes:
+    - /var/log/nginx/:/var/log/analyse/
+    - /usr/share/websites/awstats/:/etc/awstats
+  restart: on-failure:10
+  mem_limit: 75m
+```
 

@@ -4,14 +4,7 @@ RUN apt-get -y update && \
 	apt-get install -y \
 		apache2 \
 		awstats \
-		gettext
-
-RUN mkdir -p /opt/GeoIP && \
-    curl -L https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz \
-        | gunzip -c - > /opt/GeoIP/GeoIP.dat && \
-    curl -L https://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz \
-        | gunzip -c - > /opt/GeoIP/GeoIPv6.dat
-
+		gettext 
 
 ADD config /var/awstats-config/
 COPY run.sh /
